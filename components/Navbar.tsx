@@ -20,36 +20,36 @@ import { IconLogout, IconUser, IconLogin } from "@tabler/icons-react"
 const components: { title: string; href: string; description: string }[] = [
   {
     title: "Theory of Machines",
-    href: "/docs/primitives/alert-dialog",
+    href: "/theory-of-machines",
     description:
       "Find models related to the Theory of Machines.",
   },
   {
     title: "Manufacturing Technology",
-    href: "/docs/primitives/hover-card",
+    href: "/manufacturing-technology",
     description:
       "Find models related to the Manufacturing Technology.",
   },
   {
     title: "Machine and Machine Tools",
-    href: "/docs/primitives/progress",
+    href: "/machine-and-machine-tools",
     description:
       "Find models related to the Machine and Machine Tools.",
   },
   {
     title: "Solid Modeling",
-    href: "/docs/primitives/scroll-area",
+    href: "/solid-modeling",
     description: "Find models related to the Solid Modeling.",
   },
   {
     title: "Thermodynamics",
-    href: "/docs/primitives/tabs",
+    href: "/thermodynamics",
     description:
       "Find models related to the Thermodynamics.",
   },
   {
     title: "Miscellaneous",
-    href: "/docs/primitives/tooltip",
+    href: "/miscellaneous",
     description:
       "Find models under Miscellaneous category.",
   },

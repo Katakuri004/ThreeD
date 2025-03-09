@@ -1,17 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { use } from "react";
 import { LayoutGrid, type Card } from "@/components/ui/layout-grid";
 import { Button } from "@/components/ui/button";
 import { BackgroundBoxes } from "@/components/ui/background-boxes";
-import { IconHeart, IconDownload, IconMessageCircle, IconBookmark, Icon3dCubeSphere } from "@tabler/icons-react";
+import { IconHeart, IconDownload, IconMessageCircle, IconBookmark, Icon3dCubeSphere, IconTrophy } from "@tabler/icons-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-
-export type ModelTag = "misc" | "tom" | "ht" | "th" | "civ" | "fld" | "sld";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import { ModelTag, TAG_LABELS } from "@/types/models";
 
 interface ProductImage {
   id: number;
@@ -19,10 +18,24 @@ interface ProductImage {
   caption: string;
 }
 
+interface Author {
+  id: string;
+  name: string;
+  username: string;
+  image: string;
+  stats: {
+    totalLikes: number;
+    totalDownloads: number;
+    totalModels: number;
+    activeBounties: number;
+    completedBounties: number;
+  };
+}
+
 interface ProductDetails {
   id: string;
   title: string;
-  author: string;
+  author: Author;
   description: string;
   images: ProductImage[];
   likes: number;
@@ -30,13 +43,26 @@ interface ProductDetails {
   downloads: number;
   comments: number;
   tag: ModelTag;
+  createdAt: string;
 }
 
 // Mock data - replace with actual data fetching
 const productData: ProductDetails = {
   id: "1",
   title: "Complex Gear Assembly",
-  author: "John Doe",
+  author: {
+    id: "author1",
+    name: "John Doe",
+    username: "johndoe",
+    image: "",
+    stats: {
+      totalLikes: 1234,
+      totalDownloads: 567,
+      totalModels: 45,
+      activeBounties: 3,
+      completedBounties: 12,
+    },
+  },
   description: "A detailed 3D model of an intricate gear assembly with multiple moving parts.",
   tag: "tom",
   images: [
@@ -75,20 +101,11 @@ const productData: ProductDetails = {
   saves: 127,
   downloads: 89,
   comments: 32,
+  createdAt: "2024-02-20",
 };
 
-const TAG_LABELS: Record<ModelTag, string> = {
-  misc: "Miscellaneous",
-  tom: "Theory of Machines",
-  ht: "Heat Transfer",
-  th: "Thermal",
-  civ: "Civil Engineering",
-  fld: "Fluid Mechanics",
-  sld: "Solid Modeling"
-};
-
-export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function ProductPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -123,7 +140,16 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <h1 className="text-4xl font-bold">{productData.title}</h1>
             <Badge variant={productData.tag}>{TAG_LABELS[productData.tag]}</Badge>
           </div>
-          <p className="text-lg text-muted-foreground">by {productData.author}</p>
+          <div className="flex items-center gap-4">
+            <UserAvatar 
+              user={productData.author} 
+              showName 
+              avatarClassName="h-10 w-10"
+            />
+            <span className="text-sm text-muted-foreground">
+              Posted on {new Date(productData.createdAt).toLocaleDateString()}
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[2fr,1fr]">
@@ -135,6 +161,38 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="rounded-lg border bg-card p-6">
               <h2 className="mb-4 text-xl font-semibold">Description</h2>
               <p className="text-muted-foreground">{productData.description}</p>
+            </div>
+
+            <div className="rounded-lg border bg-card p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">About the Author</h2>
+                <Link href={`/user/${productData.author.id}`}>
+                  <Button variant="ghost">View Profile</Button>
+                </Link>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <IconHeart className="h-5 w-5 text-red-500" />
+                    <span className="font-medium">Total Likes</span>
+                  </div>
+                  <p className="text-2xl font-bold">{productData.author.stats.totalLikes}</p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon3dCubeSphere className="h-5 w-5 text-blue-500" />
+                    <span className="font-medium">Total Models</span>
+                  </div>
+                  <p className="text-2xl font-bold">{productData.author.stats.totalModels}</p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <IconTrophy className="h-5 w-5 text-yellow-500" />
+                    <span className="font-medium">Completed Bounties</span>
+                  </div>
+                  <p className="text-2xl font-bold">{productData.author.stats.completedBounties}</p>
+                </div>
+              </div>
             </div>
           </div>
 
