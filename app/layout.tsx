@@ -5,7 +5,11 @@ import { Toaster } from "sonner"
 import "./globals.css"
 import { SessionProvider } from "next-auth/react"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+})
 
 export default function RootLayout({
   children,
@@ -14,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-grid min-h-screen`}>
+      <body className={`${inter.variable} font-sans bg-grid min-h-screen`}>
         <SessionProvider>
           {children}
           <Toaster />

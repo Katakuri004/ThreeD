@@ -2,19 +2,8 @@ module.exports = {
   plugins: {
     tailwindcss: {},
     autoprefixer: {},
+    ...(process.env.NODE_ENV === 'production' ? { cssnano: {} } : {}),
     ...(process.env.NODE_ENV === 'production' ? {
-      'cssnano': {
-        preset: ['default', {
-          discardComments: {
-            removeAll: true,
-          },
-          normalizeWhitespace: false,
-          colormin: true,
-          reduceIdents: true,
-          mergeRules: true,
-          zindex: false,
-        }],
-      },
       '@fullhuman/postcss-purgecss': {
         content: [
           './pages/**/*.{js,jsx,ts,tsx}',
