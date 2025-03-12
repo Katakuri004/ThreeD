@@ -1,9 +1,46 @@
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { NextAuthOptions } from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "@/lib/prisma"
+import bcrypt from "bcrypt"
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  providers: [
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.email
+          }
+        })
+
+        if (!user || !user?.hashedPassword) {
+          return null
+        }
+
+        const passwordMatch = await bcrypt.compare(
+          credentials.password,
+          user.hashedPassword
+        )
+
+        if (!passwordMatch) {
+          return null
+        }
+
+        return user
+      }
+    })
+  ],
   session: {
     strategy: "jwt",
   },
@@ -13,11 +50,10 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async session({ token, session }) {
       if (token) {
-        session.user.id = token.id
-        session.user.name = token.name
-        session.user.email = token.email
-        session.user.image = token.picture
-        session.user.verified = token.verified
+        session.user.id = token.id as string
+        session.user.name = token.name as string
+        session.user.email = token.email as string
+        session.user.image = token.picture as string | null
       }
 
       return session
@@ -25,7 +61,7 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       const dbUser = await prisma.user.findFirst({
         where: {
-          email: token.email,
+          email: token.email!,
         },
       })
 
@@ -41,7 +77,6 @@ export const authOptions: NextAuthOptions = {
         name: dbUser.name,
         email: dbUser.email,
         picture: dbUser.image,
-        verified: dbUser.verified,
       }
     },
   },
