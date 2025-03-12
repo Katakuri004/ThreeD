@@ -10,6 +10,8 @@ import { BackgroundBoxes } from "@/components/ui/background-boxes";
 import { toast } from "sonner";
 import { IconPlus, IconX } from "@tabler/icons-react";
 import Image from "next/image";
+import { useUploadThing } from "@/lib/uploadthing";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -35,6 +37,8 @@ export default function UploadPage() {
     images: [],
   });
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const { startUpload } = useUploadThing("modelUploader");
+  const router = useRouter();
 
   const handleFileSelect = (file: File) => {
     setFormData((prev) => ({ ...prev, file }));
@@ -76,12 +80,28 @@ export default function UploadPage() {
     }
 
     try {
-      // TODO: Implement actual file upload and form submission
+      // Upload the main model file
+      const modelUploadResult = await startUpload([formData.file]);
+      if (!modelUploadResult) {
+        throw new Error("Failed to upload model file");
+      }
+
+      // Upload images if any
+      let imageUrls: string[] = [];
+      if (formData.images.length > 0) {
+        const imageUploadResult = await startUpload(formData.images);
+        if (imageUploadResult) {
+          imageUrls = imageUploadResult.map(res => res.url);
+        }
+      }
+
       toast.success("Model uploaded successfully!");
       setShowForm(false);
       setFormData({ title: "", description: "", file: null, images: [] });
       setImagePreviews([]);
+      router.push("/dashboard");
     } catch (error) {
+      console.error(error);
       toast.error("Failed to upload model");
     }
   };
@@ -109,13 +129,14 @@ export default function UploadPage() {
                 Add information about your CAD model to help others discover it.
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <div className="grid gap-4 py-4">
+            
+            <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="title">Title</Label>
                 <Input
                   id="title"
                   value={formData.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  onChange={(e) =>
                     setFormData((prev) => ({ ...prev, title: e.target.value }))
                   }
                   placeholder="Enter a descriptive title"
@@ -126,7 +147,7 @@ export default function UploadPage() {
                 <Textarea
                   id="description"
                   value={formData.description}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                  onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
                       description: e.target.value,
@@ -136,7 +157,8 @@ export default function UploadPage() {
                   className="h-32 resize-none"
                 />
               </div>
-              <div className="grid gap-2">
+              
+              <div>
                 <Label>Gallery Images (Optional)</Label>
                 <div className="grid grid-cols-3 gap-4">
                   {imagePreviews.map((preview, index) => (
@@ -175,6 +197,7 @@ export default function UploadPage() {
                 </p>
               </div>
             </div>
+
             <AlertDialogFooter>
               <Button variant="outline" onClick={() => setShowForm(false)}>
                 Cancel

@@ -5,7 +5,7 @@ import { BackgroundBoxes } from "@/components/ui/background-boxes"
 import { IconHeart, IconDownload } from "@tabler/icons-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { type ModelTag } from "@/app/models/[id]/page"
+import { ModelTag, TAG_LABELS } from "@/types/models"
 import { TagSelector } from "@/components/ui/tag-selector"
 import { useState } from "react"
 
@@ -19,16 +19,6 @@ interface Model {
   downloads: number
   tag: ModelTag
 }
-
-const TAG_LABELS: Record<ModelTag, string> = {
-  misc: "Miscellaneous",
-  tom: "Theory of Machines",
-  ht: "Heat Transfer",
-  th: "Thermal",
-  civ: "Civil Engineering",
-  fld: "Fluid Mechanics",
-  sld: "Solid Modeling"
-};
 
 const models: Model[] = [
   {
@@ -90,6 +80,86 @@ const models: Model[] = [
     likes: 203,
     downloads: 167,
     tag: "sld",
+  },
+  {
+    id: "7",
+    title: "Solar Panel Thermal Analysis",
+    author: "David Lee",
+    description: "Comprehensive thermal analysis model of a solar panel system with heat distribution patterns.",
+    gradient: "from-red-500 via-orange-500 to-yellow-500",
+    likes: 178,
+    downloads: 132,
+    tag: "ht",
+  },
+  {
+    id: "8",
+    title: "Wind Turbine Assembly",
+    author: "Rachel Green",
+    description: "Complete wind turbine assembly with detailed blade design and mechanical components.",
+    gradient: "from-cyan-500 via-blue-500 to-indigo-500",
+    likes: 289,
+    downloads: 201,
+    tag: "tom",
+  },
+  {
+    id: "9",
+    title: "Suspension Bridge Analysis",
+    author: "Chris Wilson",
+    description: "Structural analysis model of a suspension bridge with load distribution studies.",
+    gradient: "from-slate-500 via-gray-500 to-zinc-500",
+    likes: 234,
+    downloads: 167,
+    tag: "civ",
+  },
+  {
+    id: "10",
+    title: "HVAC Duct System",
+    author: "Lisa Anderson",
+    description: "Detailed HVAC duct system with airflow analysis and thermal considerations.",
+    gradient: "from-teal-500 via-emerald-500 to-green-500",
+    likes: 145,
+    downloads: 98,
+    tag: "fld",
+  },
+  {
+    id: "11",
+    title: "Robotic Arm Mechanism",
+    author: "Tom Parker",
+    description: "6-axis robotic arm with inverse kinematics and motion simulation.",
+    gradient: "from-pink-500 via-rose-500 to-red-500",
+    likes: 321,
+    downloads: 245,
+    tag: "tom",
+  },
+  {
+    id: "12",
+    title: "Industrial Boiler Design",
+    author: "Maria Garcia",
+    description: "High-efficiency industrial boiler with thermal analysis and steam flow patterns.",
+    gradient: "from-violet-500 via-purple-500 to-fuchsia-500",
+    likes: 167,
+    downloads: 123,
+    tag: "th",
+  },
+  {
+    id: "13",
+    title: "Automotive Chassis",
+    author: "James Wilson",
+    description: "Complete automotive chassis design with stress analysis and material specifications.",
+    gradient: "from-amber-500 via-yellow-500 to-orange-500",
+    likes: 198,
+    downloads: 156,
+    tag: "sld",
+  },
+  {
+    id: "14",
+    title: "Wave Energy Converter",
+    author: "Sophie Chen",
+    description: "Innovative wave energy conversion system with fluid-structure interaction analysis.",
+    gradient: "from-blue-500 via-sky-500 to-cyan-500",
+    likes: 276,
+    downloads: 189,
+    tag: "fld",
   }
 ]
 

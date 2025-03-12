@@ -1,41 +1,42 @@
 import { NextResponse } from 'next/server'
-import { writeFile } from 'fs/promises'
-import { join } from 'path'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../auth/[...nextauth]/route'
+import { db } from '@/lib/db'
 
 export async function POST(req: Request) {
   try {
-    const formData = await req.formData()
-    const file = formData.get('file') as File
-    
-    if (!file) {
-      return NextResponse.json(
-        { error: "No file provided" },
-        { status: 400 }
-      )
+    const session = await getServerSession(authOptions)
+
+    if (!session) {
+      return new NextResponse('Unauthorized', { status: 401 })
     }
 
-    const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
+    const formData = await req.formData()
+    const file = formData.get('file') as File
+    const title = formData.get('title') as string
+    const description = formData.get('description') as string
+    const category = formData.get('category') as string
 
-    // Create unique filename
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1E9)}`
-    const filename = `${uniqueSuffix}-${file.name}`
-    
-    // Save to public/uploads directory
-    const uploadDir = join(process.cwd(), 'public', 'uploads')
-    const filepath = join(uploadDir, filename)
-    
-    await writeFile(filepath, buffer)
-    
-    // Return the URL for the uploaded file
-    const url = `/uploads/${filename}`
-    
-    return NextResponse.json({ url })
+    if (!file || !title || !category) {
+      return new NextResponse('Missing required fields', { status: 400 })
+    }
+
+    // TODO: Implement actual file upload to cloud storage (e.g., S3)
+    // For now, we'll just save the metadata
+    const model = await db.model.create({
+      data: {
+        title,
+        description,
+        category,
+        fileUrl: 'placeholder-url', // Replace with actual uploaded file URL
+        thumbnail: 'placeholder-thumbnail', // Replace with actual thumbnail URL
+        userId: session.user.id,
+      },
+    })
+
+    return NextResponse.json(model)
   } catch (error) {
-    console.error('Upload error:', error)
-    return NextResponse.json(
-      { error: "Upload failed" },
-      { status: 500 }
-    )
+    console.error('[UPLOAD_ERROR]', error)
+    return new NextResponse('Internal Error', { status: 500 })
   }
 } 

@@ -27,7 +27,6 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
-  @@index([userId])
 }
 
 model Session {
@@ -36,8 +35,6 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }
 
 model User {
@@ -46,35 +43,53 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  hashedPassword String?  @map("password")
+  role          String    @default("USER")
+  verified      Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
   accounts      Account[]
   sessions      Session[]
-  points        Points?
-  requests      Request[]
-  acceptedRequests Request[] @relation("AcceptedRequests")
+  models        Model[]
+  comments      Comment[]
+  contributions Int       @default(0)
+
+  @@map("users")
 }
 
-model Points {
-  id     String @id @default(cuid())
-  userId String @unique
-  amount Int    @default(10000)
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
-}
-
-model Request {
-  id          String   @id @default(cuid())
+model Model {
+  id          String    @id @default(cuid())
   title       String
-  description String
-  pointsPrize Int
-  status      String   @default("open")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  requesterId String
-  accepterId  String?
-  requester   User     @relation(fields: [requesterId], references: [id])
-  accepter    User?    @relation("AcceptedRequests", fields: [accepterId], references: [id])
+  description String?
+  category    String
+  fileUrl     String
+  thumbnail   String?
+  likes       Int       @default(0)
+  downloads   Int       @default(0)
+  status      String    @default("DRAFT") // DRAFT, PUBLIC, PRIVATE
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments    Comment[]
+}
 
-  @@index([requesterId])
-  @@index([accepterId])
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  modelId   String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  model     Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 } 

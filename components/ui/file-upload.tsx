@@ -37,8 +37,9 @@ export function FileUpload({ className, onFileSelect }: FileUploadProps) {
     accept: {
       'model/stl': ['.stl'],
       'model/obj': ['.obj'],
-      'model/fbx': ['.fbx'],
-      'model/gltf': ['.gltf', '.glb'],
+      'model/gltf+json': ['.gltf'],
+      'model/gltf-binary': ['.glb'],
+      'application/octet-stream': ['.stl', '.obj', '.fbx'],
     },
     maxFiles: 1,
   });

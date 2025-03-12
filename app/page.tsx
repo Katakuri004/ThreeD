@@ -45,8 +45,8 @@ const features = [
     icon: <IconDevices className="h-6 w-6 text-neutral-500" />,
   },
   {
-    title: "24/7 Support",
-    description: "Our dedicated support team is available around the clock to help you with any questions.",
+    title: "Dont find it?",
+    description: "Just put up a Bounty with Reward and have it built for you.",
     icon: <IconHeadset className="h-6 w-6 text-neutral-500" />,
   },
   {
@@ -79,7 +79,7 @@ export default function Home() {
         <BentoGrid>
           <BentoGridItem
             title="3D Modeling Excellence"
-            description="Create stunning 3D models with our advanced modeling tools and intuitive interface."
+            description="Find stunning 3D models with our advanced modeling tools and intuitive interface."
             header={
               <div className="relative flex h-40 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-purple-500 after:absolute after:inset-0 after:rounded-lg after:border after:border-transparent after:transition-all hover:after:border-2 hover:after:border-violet-500 hover:after:bg-gradient-to-b hover:after:from-violet-500/20 hover:after:to-purple-500/20">
                 <Icon3dCubeSphere className="relative z-10 h-16 w-16 text-white" strokeWidth={1.5} />
@@ -89,8 +89,8 @@ export default function Home() {
             icon={<IconRocket className="h-4 w-4 text-neutral-500" />}
           />
           <BentoGridItem
-            title="VR Integration"
-            description="Experience your 3D creations in virtual reality with seamless VR integration."
+            title="3D Workspace"
+            description="View any of the 3D CAD models in our 3D Workspace."
             header={
               <div className="relative flex h-40 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 to-fuchsia-500 after:absolute after:inset-0 after:rounded-lg after:border after:border-transparent after:transition-all hover:after:border-2 hover:after:border-purple-500 hover:after:bg-gradient-to-b hover:after:from-purple-500/20 hover:after:to-fuchsia-500/20">
                 <IconHeadset className="relative z-10 h-16 w-16 text-white" strokeWidth={1.5} />
@@ -99,8 +99,8 @@ export default function Home() {
             icon={<IconBrain className="h-4 w-4 text-neutral-500" />}
           />
           <BentoGridItem
-            title="AR Visualization"
-            description="Bring your 3D models into the real world with augmented reality capabilities."
+            title="Vast Explore Library"
+            description="Explore a vast library of 3D models with our Explore Library."
             header={
               <div className="relative flex h-40 items-center justify-center rounded-lg bg-gradient-to-br from-fuchsia-500 to-pink-500 after:absolute after:inset-0 after:rounded-lg after:border after:border-transparent after:transition-all hover:after:border-2 hover:after:border-fuchsia-500 hover:after:bg-gradient-to-b hover:after:from-fuchsia-500/20 hover:after:to-pink-500/20">
                 <IconAugmentedReality className="relative z-10 h-16 w-16 text-white" strokeWidth={1.5} />
@@ -109,8 +109,8 @@ export default function Home() {
             icon={<IconChartBar className="h-4 w-4 text-neutral-500" />}
           />
           <BentoGridItem
-            title="Real-time Collaboration"
-            description="Work together with your team in real-time, share models, and get instant feedback."
+            title="Intuitive Interface"
+            description="Our interface is designed to be user-friendly and easy to navigate."
             header={
               <div className="relative flex h-40 items-center justify-center rounded-lg bg-gradient-to-br from-pink-500 to-rose-500 after:absolute after:inset-0 after:rounded-lg after:border after:border-transparent after:transition-all hover:after:border-2 hover:after:border-pink-500 hover:after:bg-gradient-to-b hover:after:from-pink-500/20 hover:after:to-rose-500/20">
                 <IconUsers className="relative z-10 h-16 w-16 text-white" strokeWidth={1.5} />
@@ -119,8 +119,8 @@ export default function Home() {
             icon={<IconUsers className="h-4 w-4 text-neutral-500" />}
           />
           <BentoGridItem
-            title="Precision Tools"
-            description="Access professional-grade tools for precise measurements and adjustments."
+            title="Grind the Leaderboard"
+            description="Compete with other users to build the best 3D models."
             header={
               <div className="relative flex h-40 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500 to-red-500 after:absolute after:inset-0 after:rounded-lg after:border after:border-transparent after:transition-all hover:after:border-2 hover:after:border-rose-500 hover:after:bg-gradient-to-b hover:after:from-rose-500/20 hover:after:to-red-500/20">
                 <IconRuler className="relative z-10 h-16 w-16 text-white" strokeWidth={1.5} />

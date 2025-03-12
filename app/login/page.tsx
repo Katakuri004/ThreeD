@@ -12,7 +12,7 @@ export default function LoginPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl") || "/"
+  const callbackUrl = searchParams.get("callbackUrl") || "/profile"
   const error = searchParams.get("error")
 
   useEffect(() => {

@@ -2,6 +2,7 @@
 import React from "react";
 import { BackgroundBoxes } from "./ui/background-boxes";
 import { Button } from "./ui/button";
+import Link from "next/link";
 
 export function Hero() {
   return (
@@ -22,15 +23,14 @@ export function Hero() {
             Welcome to <span className="text-violet-500">ThreeD</span>
           </h1>
           <p className="mt-4 font-normal text-base md:text-lg text-neutral-800 dark:text-neutral-200 max-w-lg text-center mx-auto">
-            Experience the next generation of 3D visualization and modeling. Create, customize,
-            and collaborate on stunning 3D projects with our cutting-edge platform.
+            Create. Share. Find Your CAD Needs in ThreeD
           </p>
           <div className="mt-8 flex justify-center gap-4">
-            <Button className="bg-violet-500 hover:bg-violet-600 text-white px-6 py-3 rounded-lg font-medium">
-              Get Started
+            <Button asChild className="bg-violet-500 hover:bg-violet-600 text-white px-6 py-3 rounded-lg font-medium">
+              <Link href="/about">About</Link>
             </Button>
-            <Button variant="outline" className="border-violet-500 text-violet-500 hover:bg-violet-500/10 px-6 py-3 rounded-lg font-medium">
-              Learn More
+            <Button asChild variant="outline" className="border-violet-500 text-violet-500 hover:bg-violet-500/10 px-6 py-3 rounded-lg font-medium">
+              <Link href="/explore">Explore</Link>
             </Button>
           </div>
         </div>
