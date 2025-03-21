@@ -1,49 +1,39 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { use } from "react";
-import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Stage, useGLTF } from "@react-three/drei";
 import { BackgroundBoxes } from "@/components/ui/background-boxes";
 import { Button } from "@/components/ui/button";
 import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
-import { toast } from "sonner";
+import { ModelViewer } from "@/components/ModelViewer";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
 
-function Model({ url }: { url: string }) {
-  const [error, setError] = useState(false);
-
-  try {
-    const { scene } = useGLTF(url);
-    return <primitive object={scene} />;
-  } catch (err) {
-    if (!error) {
-      setError(true);
-      toast.error("Failed to load 3D model");
-    }
-    // Return a simple cube as fallback
-    return (
-      <mesh>
-        <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial color="gray" />
-      </mesh>
-    );
-  }
-}
-
-function LoadingFallback() {
-  return (
+export default function SandboxPage({ params }: { params: { id: string } }) {
+  const { id } = params;
+  const [showAlert, setShowAlert] = useState(true);
+  
+  // Mock model URL - in production, this would be fetched from your database
+  const modelUrl = `/models/${id}/model.glb`;
+  
+  // Mock model component
+  const MockModel = () => (
     <mesh>
-      <sphereGeometry args={[0.5, 32, 32]} />
-      <meshStandardMaterial color="white" wireframe />
+      <sphereGeometry args={[1, 32, 32]} />
+      <meshStandardMaterial 
+        color="#4f46e5"
+        metalness={0.5}
+        roughness={0.2}
+        wireframe
+      />
     </mesh>
   );
-}
-
-export default function SandboxPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
-  // TODO: Replace with actual model fetching logic
-  const modelUrl = `/models/${id}/model.glb`;
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background">
@@ -58,39 +48,31 @@ export default function SandboxPage({ params }: { params: Promise<{ id: string }
                 Back to Model
               </Button>
             </Link>
-            <div className="flex items-center gap-4">
-              <Button variant="outline" size="sm">
-                Reset View
-              </Button>
-              <Button variant="outline" size="sm">
-                Screenshot
-              </Button>
-            </div>
           </div>
         </div>
 
         {/* 3D Viewer */}
         <div className="h-screen w-full">
-          <Canvas
-            camera={{ position: [0, 0, 5], fov: 45 }}
-            style={{ background: "transparent" }}
-          >
-            <Suspense fallback={<LoadingFallback />}>
-              <Stage environment="city" intensity={0.5}>
-                <Model url={modelUrl} />
-              </Stage>
-              <OrbitControls
-                autoRotate
-                autoRotateSpeed={0.5}
-                enableZoom={true}
-                enablePan={true}
-                minDistance={2}
-                maxDistance={10}
-              />
-            </Suspense>
-          </Canvas>
+          <ModelViewer 
+            modelUrl={modelUrl} 
+            className="h-full"
+            fallbackModel={<MockModel />}
+          />
         </div>
       </div>
+
+      {/* Alert Dialog */}
+      <AlertDialog open={showAlert} onOpenChange={setShowAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>No CAD Model Found</AlertDialogTitle>
+            <AlertDialogDescription>
+              The requested CAD model is not available. You are viewing a mock model for demonstration purposes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogAction>Continue</AlertDialogAction>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 } 

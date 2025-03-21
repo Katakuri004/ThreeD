@@ -20,7 +20,11 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.variable} font-sans bg-grid min-h-screen`}>
         <SessionProvider>
-          {children}
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-1 pt-16">
+              {children}
+            </main>
+          </div>
           <Toaster />
         </SessionProvider>
       </body>

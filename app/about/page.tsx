@@ -1,228 +1,295 @@
 "use client"
 
-import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
-import { AnimatedTooltip } from "@/components/ui/animated-tooltip";
-import { BackgroundBeams } from "@/components/ui/background-beams";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useState } from "react";
-import { IconBrain, IconUsers, IconRocket, IconHeart, IconTrophy, IconChartBar } from "@tabler/icons-react";
-import { motion } from "framer-motion";
+import { BackgroundBoxes } from "@/components/ui/background-boxes"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Textarea } from "@/components/ui/textarea"
+import { Canvas } from "@react-three/fiber"
+import { OrbitControls, Stage, useGLTF } from "@react-three/drei"
+import { motion } from "framer-motion"
+import { 
+  IconBrandGithub, 
+  IconBrandLinkedin, 
+  IconMail, 
+  IconSchool,
+  IconTarget,
+  IconBook,
+  IconUsers,
+  IconSparkles,
+  IconLogin
+} from "@tabler/icons-react"
+import Link from "next/link"
+import { useState } from "react"
+import { useSession } from "next-auth/react"
 
-const reviews = [
-  { 
-    quote: "ThreeD has revolutionized how we teach mechanical engineering concepts!", 
-    name: "Prof. Alice Chen", 
-    title: "MIT Professor" 
-  },
-  { 
-    quote: "The platform's 3D models helped me understand complex mechanisms better.", 
-    name: "Bob Smith", 
-    title: "Engineering Student" 
-  },
-  { 
-    quote: "An invaluable resource for our engineering department.", 
-    name: "Dr. Charlie Wilson", 
-    title: "Department Head" 
-  },
-  { 
-    quote: "The collaborative features make teaching so much more interactive.", 
-    name: "Diana Martinez", 
-    title: "Engineering Educator" 
-  },
-];
+// Mock 3D model for the about page
+function AboutModel() {
+  return (
+    <mesh>
+      <torusKnotGeometry args={[1, 0.3, 128, 16]} />
+      <meshStandardMaterial 
+        color="#4f46e5"
+        metalness={0.7}
+        roughness={0.2}
+        wireframe
+        transparent
+        opacity={0.8}
+      />
+    </mesh>
+  )
+}
 
-const teamMembers = [
-  { 
-    id: 1, 
-    name: "John Doe", 
-    designation: "Founder & CEO", 
-    image: "https://api.dicebear.com/7.x/avatars/svg?seed=John",
-    bio: "Former SpaceX engineer with a passion for education"
-  },
-  { 
-    id: 2, 
-    name: "Jane Smith", 
-    designation: "CTO", 
-    image: "https://api.dicebear.com/7.x/avatars/svg?seed=Jane",
-    bio: "PhD in Computer Graphics from Stanford"
-  },
-  { 
-    id: 3, 
-    name: "Emily Davis", 
-    designation: "Head of Education", 
-    image: "https://api.dicebear.com/7.x/avatars/svg?seed=Emily",
-    bio: "15 years of experience in engineering education"
-  },
-  { 
-    id: 4, 
-    name: "Michael Chen", 
-    designation: "Lead Developer", 
-    image: "https://api.dicebear.com/7.x/avatars/svg?seed=Michael",
-    bio: "Full-stack developer specialized in 3D web technologies"
-  },
-];
-
-const stats = [
-  { number: "50K+", label: "Active Users", icon: <IconUsers className="h-6 w-6" /> },
-  { number: "100K+", label: "3D Models", icon: <IconRocket className="h-6 w-6" /> },
-  { number: "200+", label: "Universities", icon: <IconBrain className="h-6 w-6" /> },
-  { number: "1M+", label: "Downloads", icon: <IconChartBar className="h-6 w-6" /> },
-];
-
-const values = [
+const features = [
   {
-    title: "Innovation",
-    description: "Pushing the boundaries of 3D visualization in education",
-    icon: <IconRocket className="h-6 w-6 text-violet-500" />,
+    title: "Interactive 3D Models",
+    description: "Explore engineering concepts through interactive 3D models that you can rotate, zoom, and examine from every angle.",
+    icon: <IconTarget className="h-8 w-8 text-indigo-500" />
   },
   {
-    title: "Accessibility",
-    description: "Making engineering education accessible to everyone",
-    icon: <IconHeart className="h-6 w-6 text-pink-500" />,
+    title: "Educational Content",
+    description: "Access comprehensive educational content covering various engineering subjects, from Theory of Machines to Thermodynamics.",
+    icon: <IconBook className="h-8 w-8 text-indigo-500" />
   },
   {
-    title: "Excellence",
-    description: "Maintaining the highest standards in our platform",
-    icon: <IconTrophy className="h-6 w-6 text-yellow-500" />,
+    title: "Community Driven",
+    description: "Join a community of engineering students and professionals sharing knowledge and resources.",
+    icon: <IconUsers className="h-8 w-8 text-indigo-500" />
   },
-];
+  {
+    title: "Easy to Use",
+    description: "Simple and intuitive interface designed to make learning engineering concepts more accessible.",
+    icon: <IconSparkles className="h-8 w-8 text-indigo-500" />
+  }
+]
+
+const team = [
+  {
+    name: "John Doe",
+    role: "Founder & Lead Developer",
+    bio: "Passionate about making engineering education more accessible through technology.",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+  },
+  {
+    name: "Jane Smith",
+    role: "Content Director",
+    bio: "Experienced engineering educator with a focus on interactive learning.",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane"
+  },
+  {
+    name: "Mike Johnson",
+    role: "3D Model Specialist",
+    bio: "Expert in creating detailed 3D models for engineering education.",
+    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike"
+  }
+]
 
 export default function AboutPage() {
-  const [comment, setComment] = useState("");
+  const { data: session } = useSession()
+  const [message, setMessage] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">("idle")
 
-  const handleCommentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setComment(e.target.value);
-  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setSubmitStatus("idle")
 
-  const handleCommentSubmit = () => {
-    console.log("Comment submitted:", comment);
-    setComment("");
-  };
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        throw new Error(data.error || "Failed to send message")
+      }
+      
+      setSubmitStatus("success")
+      setMessage("")
+    } catch (error) {
+      setSubmitStatus("error")
+      console.error("Error sending message:", error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
-    <div className="min-h-screen w-full bg-black/[0.96] antialiased bg-grid-white/[0.02] relative overflow-hidden">
-      <BackgroundBeams />
-      
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-24 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-violet-500 to-pink-500">
-            Revolutionizing Engineering Education
-          </h1>
-          <p className="text-xl text-neutral-300 leading-relaxed">
-            ThreeD is on a mission to transform how engineering concepts are taught and learned through interactive 3D visualization and collaboration.
-          </p>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="container mx-auto px-4 py-16 relative z-10">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-          {stats.map((stat, index) => (
+    <div className="relative min-h-screen w-full overflow-hidden bg-background">
+      <BackgroundBoxes className="fixed inset-0" />
+      <div className="relative z-10">
+        {/* Hero Section */}
+        <section className="container mx-auto px-4 py-24">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="text-center p-6 rounded-lg bg-white/5 backdrop-blur-sm"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
             >
-              <div className="flex justify-center mb-4 text-violet-500">{stat.icon}</div>
-              <h3 className="text-3xl font-bold text-white mb-2">{stat.number}</h3>
-              <p className="text-neutral-400">{stat.label}</p>
+              <h1 className="text-5xl font-bold mb-6">About ThreeD</h1>
+              <p className="text-xl text-gray-300 mb-8">
+                ThreeD is a platform dedicated to revolutionizing engineering education through interactive 3D models and immersive learning experiences.
+              </p>
+              <div className="flex gap-4">
+                <Button asChild>
+                  <Link href="/explore">Explore Models</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/contact">Contact Us</Link>
+                </Button>
+              </div>
             </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Mission Section */}
-      <section className="container mx-auto px-4 py-16 relative z-10">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-neutral-200 to-neutral-600 text-center">
-            Our Mission
-          </h2>
-          <div className="prose prose-invert mx-auto">
-            <p className="text-lg text-neutral-300 leading-relaxed text-center">
-              At ThreeD, we believe that understanding complex engineering concepts shouldn't be a struggle. 
-              Our platform combines cutting-edge 3D visualization technology with intuitive collaboration tools 
-              to create an immersive learning experience that makes engineering education more engaging and effective.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Values Section */}
-      <section className="container mx-auto px-4 py-16 relative z-10">
-        <h2 className="text-3xl font-bold mb-12 bg-clip-text text-transparent bg-gradient-to-r from-neutral-200 to-neutral-600 text-center">
-          Our Values
-        </h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          {values.map((value, index) => (
             <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="p-6 rounded-lg bg-white/5 backdrop-blur-sm"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="h-[400px]"
             >
-              <div className="mb-4">{value.icon}</div>
-              <h3 className="text-xl font-semibold text-white mb-2">{value.title}</h3>
-              <p className="text-neutral-400">{value.description}</p>
+              <Canvas shadows camera={{ position: [0, 0, 5], fov: 45 }}>
+                <Stage environment="city" intensity={0.6}>
+                  <AboutModel />
+                </Stage>
+                <OrbitControls
+                  makeDefault
+                  minDistance={3}
+                  maxDistance={10}
+                  maxPolarAngle={Math.PI / 2}
+                />
+              </Canvas>
             </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section className="container mx-auto px-4 py-16 relative z-10">
-        <h2 className="text-3xl font-bold mb-12 bg-clip-text text-transparent bg-gradient-to-r from-neutral-200 to-neutral-600 text-center">
-          Meet Our Team
-        </h2>
-        <div className="flex flex-col items-center gap-8">
-          <div className="flex gap-8 justify-center flex-wrap">
-            <AnimatedTooltip items={teamMembers} />
           </div>
-          <p className="text-neutral-400 text-center max-w-2xl mt-8">
-            Our team combines expertise in engineering, education, and technology to create the best possible learning experience for our users.
-          </p>
-        </div>
-      </section>
+        </section>
 
-      {/* Reviews Section */}
-      <section className="container mx-auto px-4 py-16 relative z-10">
-        <h2 className="text-3xl font-bold mb-12 bg-clip-text text-transparent bg-gradient-to-r from-neutral-200 to-neutral-600 text-center">
-          What People Say
-        </h2>
-        <div className="h-[200px] rounded-md flex flex-col antialiased items-center justify-center relative overflow-hidden">
-          <InfiniteMovingCards items={reviews} direction="right" speed="slow" />
-        </div>
-      </section>
-
-      {/* Contact Section */}
-      <section className="container mx-auto px-4 py-16 relative z-10">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 bg-clip-text text-transparent bg-gradient-to-r from-neutral-200 to-neutral-600 text-center">
-            Get in Touch
-          </h2>
-          <Card className="p-6 bg-white/5 backdrop-blur-sm">
-            <Textarea
-              className="min-h-[100px] bg-neutral-950 border-neutral-800 text-neutral-200 resize-none mb-4"
-              placeholder="Share your thoughts or questions with us..."
-              value={comment}
-              onChange={handleCommentChange}
-            />
-            <div className="flex justify-end">
-              <Button
-                className="bg-violet-500 hover:bg-violet-600 text-white"
-                onClick={handleCommentSubmit}
+        {/* Features Section */}
+        <section className="container mx-auto px-4 py-24">
+          <h2 className="text-3xl font-bold text-center mb-12">Why Choose ThreeD?</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => (
+              <motion.div
+                key={feature.title}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                Send Message
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </section>
+                <Card className="bg-background/50 backdrop-blur-sm border-white/10">
+                  <CardHeader>
+                    <div className="mb-2">{feature.icon}</div>
+                    <CardTitle>{feature.title}</CardTitle>
+                    <CardDescription>{feature.description}</CardDescription>
+                  </CardHeader>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* Team Section */}
+        <section className="container mx-auto px-4 py-24">
+          <h2 className="text-3xl font-bold text-center mb-12">Our Team</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {team.map((member, index) => (
+              <motion.div
+                key={member.name}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+              >
+                <Card className="bg-background/50 backdrop-blur-sm border-white/10">
+                  <CardHeader>
+                    <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden">
+                      <img
+                        src={member.image}
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <CardTitle className="text-center">{member.name}</CardTitle>
+                    <CardDescription className="text-center">{member.role}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-center">
+                    <p className="text-sm text-gray-400">{member.bio}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* Contact Section */}
+        <section className="container mx-auto px-4 py-24">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-6">Get in Touch</h2>
+            <p className="text-gray-300 text-center mb-8">
+              Have questions or suggestions? We'd love to hear from you!
+            </p>
+            
+            <Card className="bg-background/50 backdrop-blur-sm border-white/10">
+              <CardContent className="p-6">
+                {session ? (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-2">
+                      <label htmlFor="message" className="text-sm font-medium">
+                        Your Message
+                      </label>
+                      <Textarea
+                        id="message"
+                        placeholder="Share your thoughts or questions with us..."
+                        value={message}
+                        onChange={(e) => setMessage(e.target.value)}
+                        className="min-h-[100px] resize-none"
+                      />
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <div className="flex gap-4">
+                        <Button variant="outline" size="icon" asChild>
+                          <Link href="https://github.com" target="_blank">
+                            <IconBrandGithub className="h-5 w-5" />
+                          </Link>
+                        </Button>
+                        <Button variant="outline" size="icon" asChild>
+                          <Link href="https://linkedin.com" target="_blank">
+                            <IconBrandLinkedin className="h-5 w-5" />
+                          </Link>
+                        </Button>
+                      </div>
+                      <Button 
+                        type="submit" 
+                        disabled={isSubmitting || !message.trim()}
+                      >
+                        {isSubmitting ? "Sending..." : "Send Message"}
+                      </Button>
+                    </div>
+
+                    {submitStatus === "success" && (
+                      <p className="text-green-500 text-sm">Message sent successfully!</p>
+                    )}
+                    {submitStatus === "error" && (
+                      <p className="text-red-500 text-sm">Failed to send message. Please try again.</p>
+                    )}
+                  </form>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <p className="text-gray-400">
+                      Please sign in to send us a message.
+                    </p>
+                    <Button asChild>
+                      <Link href="/auth/signin">
+                        <IconLogin className="h-5 w-5 mr-2" />
+                        Sign In
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      </div>
     </div>
-  );
+  )
 }
