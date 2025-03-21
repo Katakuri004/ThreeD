@@ -3,84 +3,99 @@
 import { Card } from "@/components/ui/card"
 import { BackgroundBoxes } from "@/components/ui/background-boxes"
 import { Badge } from "@/components/ui/badge"
-import { type ModelTag } from "@/app/models/[id]/page"
+import { type Model, type ModelTag, TAG_LABELS } from "@/types/model"
 import { IconHeart, IconDownload, IconBookmark, IconMessageCircle, IconX } from "@tabler/icons-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useState } from "react"
 import { toast } from "sonner"
+import { Suspense } from "react"
+import { getServerSession } from "next-auth"
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth"
 
-interface Model {
-  id: string
-  title: string
-  author: string
-  description: string
-  gradient: string
-  likes: number
-  downloads: number
-  tag: ModelTag
-  date: string
+const tagVariants: Record<ModelTag, "default" | "secondary" | "destructive" | "outline"> = {
+  misc: "default",
+  tom: "secondary",
+  ht: "destructive",
+  th: "outline",
+  civ: "default",
+  fld: "secondary",
+  sld: "destructive"
 }
 
-const TAG_LABELS: Record<ModelTag, string> = {
-  misc: "Miscellaneous",
-  tom: "Theory of Machines",
-  ht: "Heat Transfer",
-  th: "Thermal",
-  civ: "Civil Engineering",
-  fld: "Fluid Mechanics",
-  sld: "Solid Modeling"
-}
-
-// Mock data - replace with actual data fetching
-const savedModels: Model[] = [
+const mockModels: Model[] = [
   {
     id: "1",
-    title: "Complex Gear Assembly",
+    title: "Theory of Machines Model",
     author: "John Doe",
-    description: "A detailed 3D model of an intricate gear assembly with multiple moving parts.",
-    gradient: "from-violet-500 via-purple-500 to-indigo-500",
-    likes: 245,
-    downloads: 180,
+    description: "A comprehensive model demonstrating various machine mechanisms",
+    gradient: "from-blue-500 to-purple-500",
+    likes: 150,
+    downloads: 75,
     tag: "tom",
-    date: "2024-03-15"
+    category: "tom",
+    fileUrl: "/models/tom-model.glb",
+    thumbnail: "/thumbnails/tom-model.png",
+    status: "PUBLIC",
+    createdAt: new Date("2024-01-15"),
+    updatedAt: new Date("2024-01-15"),
+    userId: "user123",
+    date: "2024-01-15"
   },
   {
     id: "2",
-    title: "Heat Exchanger Design",
+    title: "Heat Transfer Analysis",
     author: "Jane Smith",
-    description: "Efficient shell and tube heat exchanger model with thermal analysis.",
-    gradient: "from-pink-500 via-rose-500 to-fuchsia-500",
-    likes: 127,
-    downloads: 89,
+    description: "Interactive model showing heat transfer principles",
+    gradient: "from-red-500 to-orange-500",
+    likes: 120,
+    downloads: 60,
     tag: "ht",
-    date: "2024-03-10"
-  }
-]
-
-const uploadedModels: Model[] = [
+    category: "ht",
+    fileUrl: "/models/ht-model.glb",
+    thumbnail: "/thumbnails/ht-model.png",
+    status: "PUBLIC",
+    createdAt: new Date("2024-01-14"),
+    updatedAt: new Date("2024-01-14"),
+    userId: "user123",
+    date: "2024-01-14"
+  },
   {
     id: "3",
-    title: "Bridge Support Structure",
-    author: "You",
-    description: "Structural model of a bridge support with load analysis.",
-    gradient: "from-blue-500 via-cyan-500 to-sky-500",
-    likes: 189,
-    downloads: 145,
+    title: "Civil Engineering Structure",
+    author: "Mike Johnson",
+    description: "Detailed model of a bridge structure",
+    gradient: "from-green-500 to-teal-500",
+    likes: 200,
+    downloads: 100,
     tag: "civ",
-    date: "2024-03-08"
+    category: "civ",
+    fileUrl: "/models/civ-model.glb",
+    thumbnail: "/thumbnails/civ-model.png",
+    status: "PUBLIC",
+    createdAt: new Date("2024-01-13"),
+    updatedAt: new Date("2024-01-13"),
+    userId: "user123",
+    date: "2024-01-13"
   },
   {
     id: "4",
-    title: "Turbine Blade Assembly",
-    author: "You",
-    description: "High-performance turbine blade with cooling channels.",
-    gradient: "from-emerald-500 via-green-500 to-teal-500",
-    likes: 312,
-    downloads: 234,
+    title: "Thermal System Design",
+    author: "Sarah Wilson",
+    description: "Model showcasing thermal system components",
+    gradient: "from-yellow-500 to-red-500",
+    likes: 90,
+    downloads: 45,
     tag: "th",
-    date: "2024-03-05"
+    category: "th",
+    fileUrl: "/models/th-model.glb",
+    thumbnail: "/thumbnails/th-model.png",
+    status: "PUBLIC",
+    createdAt: new Date("2024-01-12"),
+    updatedAt: new Date("2024-01-12"),
+    userId: "user123",
+    date: "2024-01-12"
   }
 ]
 
@@ -177,9 +192,9 @@ export default function DashboardPage() {
           </TabsList>
 
           <TabsContent value="saved" className="space-y-6">
-            {savedModels.length > 0 ? (
+            {mockModels.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {savedModels.map((model) => (
+                {mockModels.map((model) => (
                   <Link key={model.id} href={`/models/${model.id}`}>
                     <ModelCard model={model} onRemove={handleRemove} />
                   </Link>
@@ -196,9 +211,9 @@ export default function DashboardPage() {
           </TabsContent>
 
           <TabsContent value="uploads" className="space-y-6">
-            {uploadedModels.length > 0 ? (
+            {mockModels.length > 0 ? (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {uploadedModels.map((model) => (
+                {mockModels.map((model) => (
                   <Link key={model.id} href={`/models/${model.id}`}>
                     <ModelCard model={model} />
                   </Link>
