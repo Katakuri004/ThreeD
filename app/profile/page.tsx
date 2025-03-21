@@ -18,9 +18,19 @@ import {
   IconChartBar,
   IconHistory,
   IconArrowUpRight,
-  IconArrowDownRight
+  IconArrowDownRight,
+  IconBrandInstagram,
+  IconBrandGithub,
+  IconBrandLinkedin,
+  IconCube,
+  IconCheckbox,
+  IconClock,
+  IconTrendingUp
 } from "@tabler/icons-react"
 import Link from "next/link"
+import { useMemo, memo, Suspense } from "react"
+import { cn } from "@/lib/utils"
+import { Component, type ReactNode } from 'react'
 
 // Add weekday labels
 const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -77,137 +87,321 @@ const achievements = [
   }
 ]
 
-// Mock data for downloaded models
-const downloadedModels = [
+interface DownloadedModel {
+  id: string
+  name: string
+  thumbnail: string
+  downloadCount: number
+  lastDownloaded: string
+}
+
+// Custom Error Boundary Component
+class CustomErrorBoundary extends Component<{ children: ReactNode, fallback: ReactNode }> {
+  state = { hasError: false }
+
+  static getDerivedStateFromError() {
+    return { hasError: true }
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback
+    }
+    return this.props.children
+  }
+}
+
+// Update mock data to match interfaces
+const detailedStats: DetailedStat[] = [
   {
-    name: "Steam Engine Model",
-    category: "Mechanical",
-    date: "2024-02-15",
-    image: "https://api.dicebear.com/7.x/shapes/svg?seed=steam"
+    title: "Total Downloads",
+    value: "1,234",
+    icon: IconDownload
   },
   {
-    name: "Gear Assembly",
-    category: "Mechanical",
-    date: "2024-02-10",
-    image: "https://api.dicebear.com/7.x/shapes/svg?seed=gear"
+    title: "Active Models",
+    value: "42",
+    icon: IconCube
   },
   {
-    name: "Hydraulic System",
-    category: "Fluid Mechanics",
-    date: "2024-02-05",
-    image: "https://api.dicebear.com/7.x/shapes/svg?seed=hydraulic"
+    title: "Completion Rate",
+    value: "98%",
+    icon: IconCheckbox
+  },
+  {
+    title: "Total Points",
+    value: "3,500",
+    icon: IconStar
+  },
+  {
+    title: "Avg. Response Time",
+    value: "2.3s",
+    icon: IconClock
+  },
+  {
+    title: "Success Rate",
+    value: "95%",
+    icon: IconTrendingUp
   }
 ]
 
-// Mock data for point transactions
-const pointTransactions = [
+const pointTransactions: PointTransaction[] = [
   {
-    id: 1,
-    type: 'earned',
-    amount: 500,
-    description: 'Model "Steam Engine" was downloaded 5 times',
-    date: '2024-02-15'
+    type: "earned",
+    amount: 100,
+    description: "Model download milestone reached",
+    date: "2024-03-15"
   },
   {
-    id: 2,
-    type: 'spent',
-    amount: 200,
-    description: 'Downloaded premium model "Advanced Gearbox"',
-    date: '2024-02-14'
+    type: "spent",
+    amount: 50,
+    description: "Premium feature access",
+    date: "2024-03-14"
   },
   {
-    id: 3,
-    type: 'earned',
-    amount: 1000,
-    description: 'Bounty completed: Complex Pump Design',
-    date: '2024-02-13'
+    type: "earned",
+    amount: 75,
+    description: "Community contribution reward",
+    date: "2024-03-13"
   },
   {
-    id: 4,
-    type: 'earned',
-    amount: 300,
-    description: 'Received 10 likes on your models',
-    date: '2024-02-12'
-  },
-  {
-    id: 5,
-    type: 'spent',
-    amount: 500,
-    description: 'Created new bounty request',
-    date: '2024-02-11'
+    type: "spent",
+    amount: 25,
+    description: "Custom model request",
+    date: "2024-03-12"
   }
 ]
 
-// Mock data for detailed statistics
-const detailedStats = [
-  {
-    title: 'Total Downloads',
-    value: '1.2k',
-    change: '+12%',
-    changeType: 'positive'
-  },
-  {
-    title: 'Active Models',
-    value: '28',
-    change: '+3',
-    changeType: 'positive'
-  },
-  {
-    title: 'Completion Rate',
-    value: '94%',
-    change: '+2.5%',
-    changeType: 'positive'
-  },
-  {
-    title: 'Total Points',
-    value: '15.5k',
-    change: '+2.1k',
-    changeType: 'positive'
-  },
-  {
-    title: 'Avg. Response Time',
-    value: '2.3d',
-    change: '-0.5d',
-    changeType: 'positive'
-  },
-  {
-    title: 'Success Rate',
-    value: '98%',
-    change: '+1%',
-    changeType: 'positive'
-  }
-]
+// Activity Grid Component
+const ActivityGrid = memo(function ActivityGrid({ data }: { data: ActivityDay[] }) {
+  return (
+    <div className="bg-black/20 rounded-lg p-6 mb-12">
+      <h2 className="text-xl font-semibold mb-6">Activity</h2>
+      <div className="grid grid-cols-7 gap-2">
+        <div className="flex flex-col gap-2">
+          {weekDays.map((day) => (
+            <div key={day} className="h-8 flex items-center justify-center text-xs text-gray-400">
+              {day}
+            </div>
+          ))}
+        </div>
+        {data.map((day, index) => (
+          <div
+            key={day.date}
+            className={cn(
+              "h-8 rounded-md transition-colors",
+              day.activity === 0
+                ? "bg-gray-800/50"
+                : day.activity < 3
+                ? "bg-indigo-900/50"
+                : day.activity < 5
+                ? "bg-indigo-700/50"
+                : "bg-indigo-500/50",
+              "hover:bg-opacity-75 cursor-pointer group relative"
+            )}
+          >
+            <div className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 rounded text-xs whitespace-nowrap">
+              {day.activity} activities on {new Date(day.date).toLocaleDateString()}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+})
 
-// Mock activity data for the grid
-const generateActivityData = () => {
-  const data = []
+// Stats Card Component
+const StatsCard = memo(function StatsCard({ title, value, icon: Icon }: DetailedStat) {
+  return (
+    <div className="bg-black/20 rounded-lg p-4">
+      <div className="flex items-center gap-4">
+        <div className="p-2 bg-indigo-500/20 rounded-lg">
+          <Icon className="w-6 h-6 text-indigo-500" />
+        </div>
+        <div>
+          <p className="text-sm text-gray-400">{title}</p>
+          <p className="text-xl font-semibold">{value}</p>
+        </div>
+      </div>
+    </div>
+  )
+})
+
+// Transaction Item Component
+const TransactionItem = memo(function TransactionItem({ transaction }: { transaction: PointTransaction }) {
+  const isPositive = transaction.type === 'earned'
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-gray-800">
+      <div>
+        <p className="font-medium">{transaction.description}</p>
+        <p className="text-sm text-gray-400">{new Date(transaction.date).toLocaleDateString()}</p>
+      </div>
+      <p className={cn("font-semibold", isPositive ? "text-green-500" : "text-red-500")}>
+        {isPositive ? '+' : '-'}{transaction.amount} points
+      </p>
+    </div>
+  )
+})
+
+// Types
+interface ActivityDay {
+  date: string
+  activity: number
+}
+
+interface DetailedStat {
+  title: string
+  value: string | number
+  icon: React.ComponentType<{ className?: string }>
+}
+
+interface PointTransaction {
+  type: 'earned' | 'spent'
+  amount: number
+  description: string
+  date: string
+}
+
+function generateActivityData(): ActivityDay[] {
+  const data: ActivityDay[] = []
   const today = new Date()
-  const totalWeeks = 53
-  const totalDays = totalWeeks * 7
-
-  // Calculate the start date (totalDays ago from today)
   const startDate = new Date(today)
-  startDate.setDate(startDate.getDate() - totalDays + 1)
+  startDate.setDate(today.getDate() - 364)
 
-  // Generate activity data for each day
-  for (let i = 0; i < totalDays; i++) {
+  for (let i = 0; i < 365; i++) {
     const currentDate = new Date(startDate)
     currentDate.setDate(startDate.getDate() + i)
     
     data.push({
-      date: currentDate,
-      count: Math.floor(Math.random() * 5) // Random activity count
+      date: currentDate.toISOString(),
+      activity: Math.floor(Math.random() * 8)
     })
   }
 
   return data
 }
 
-const activityData = generateActivityData()
+// Stats Grid Component
+const StatsGrid = memo(function StatsGrid({ stats }: { stats: DetailedStat[] }) {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {stats.map((stat, index) => (
+        <StatsCard key={index} {...stat} />
+      ))}
+    </div>
+  )
+})
+
+// Transactions List Component
+const TransactionsList = memo(function TransactionsList({ transactions }: { transactions: PointTransaction[] }) {
+  if (transactions.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-400">
+        No transactions to display
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-1">
+      {transactions.map((transaction, index) => (
+        <TransactionItem key={index} transaction={transaction} />
+      ))}
+    </div>
+  )
+})
+
+// Downloaded Models List Component
+const DownloadedModelsList = memo(function DownloadedModelsList({ models }: { models: DownloadedModel[] }) {
+  if (models.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-400">
+        No downloaded models yet
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {models.map((model) => (
+        <div
+          key={model.id}
+          className="group relative bg-black/20 rounded-lg overflow-hidden hover:bg-black/30 transition-colors"
+        >
+          <div className="aspect-video relative">
+            <img
+              src={model.thumbnail}
+              alt={model.name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement
+                target.src = 'https://placehold.co/600x400/1a1a1a/404040?text=No+Preview'
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          </div>
+          <div className="p-4">
+            <h3 className="font-semibold mb-2 group-hover:text-indigo-400 transition-colors">
+              {model.name}
+            </h3>
+            <div className="flex items-center justify-between text-sm text-gray-400">
+              <span className="flex items-center gap-1">
+                <IconDownload className="w-4 h-4" />
+                {model.downloadCount}
+              </span>
+              <span>Last: {new Date(model.lastDownloaded).toLocaleDateString()}</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+})
+
+// Mock downloaded models data
+const downloadedModels: DownloadedModel[] = [
+  {
+    id: "1",
+    name: "Steam Engine v2",
+    thumbnail: "https://placehold.co/600x400/1a1a1a/404040?text=Steam+Engine",
+    downloadCount: 156,
+    lastDownloaded: "2024-03-15"
+  },
+  {
+    id: "2",
+    name: "Advanced Gearbox",
+    thumbnail: "https://placehold.co/600x400/1a1a1a/404040?text=Gearbox",
+    downloadCount: 89,
+    lastDownloaded: "2024-03-14"
+  },
+  {
+    id: "3",
+    name: "Hydraulic Pump",
+    thumbnail: "https://placehold.co/600x400/1a1a1a/404040?text=Pump",
+    downloadCount: 234,
+    lastDownloaded: "2024-03-13"
+  }
+]
 
 export default function ProfilePage() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
 
+  // Memoize activity data to prevent unnecessary recalculation
+  const activityData = useMemo(() => generateActivityData(), [])
+
+  // Handle loading state
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-t-indigo-500 border-indigo-500/30 rounded-full animate-spin mb-4" />
+          <p className="text-gray-400">Loading profile...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Handle unauthenticated state
   if (!session) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -221,6 +415,11 @@ export default function ProfilePage() {
     )
   }
 
+  // Memoize user image URL
+  const userImage = useMemo(() => {
+    return session.user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user?.name}`
+  }, [session.user?.image, session.user?.name])
+
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background">
       <BackgroundBoxes className="fixed inset-0" />
@@ -228,14 +427,19 @@ export default function ProfilePage() {
         {/* Profile Header */}
         <div className="flex items-center gap-6 mb-12">
           <div className="w-24 h-24 rounded-full overflow-hidden bg-white/10">
+            {/* Add error handling for image load */}
             <img
-              src={session.user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user?.name}`}
+              src={userImage}
               alt={session.user?.name || "Profile"}
               className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement
+                target.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=fallback`
+              }}
             />
           </div>
           <div>
-            <h1 className="text-3xl font-bold">{session.user?.name}</h1>
+            <h1 className="text-3xl font-bold">{session.user?.name || 'Anonymous User'}</h1>
             <p className="text-gray-400">{session.user?.email}</p>
           </div>
         </div>
@@ -283,120 +487,36 @@ export default function ProfilePage() {
           </Card>
         </div>
 
-        {/* Statistics & Transactions */}
-        <section className="mb-12">
-          <Tabs defaultValue="statistics" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="statistics" className="flex items-center gap-2">
-                <IconChartBar className="h-4 w-4" />
-                Detailed Statistics
-              </TabsTrigger>
-              <TabsTrigger value="transactions" className="flex items-center gap-2">
-                <IconHistory className="h-4 w-4" />
-                Point History
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="statistics">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {detailedStats.map((stat, index) => (
-                  <Card key={stat.title} className="bg-background/50 backdrop-blur-sm border-white/10">
-                    <CardContent className="p-6">
-                      <div className="flex flex-col gap-2">
-                        <p className="text-sm text-gray-400">{stat.title}</p>
-                        <div className="flex items-center justify-between">
-                          <p className="text-2xl font-bold">{stat.value}</p>
-                          <div className={`flex items-center gap-1 text-sm ${
-                            stat.changeType === 'positive' ? 'text-green-500' : 'text-red-500'
-                          }`}>
-                            {stat.changeType === 'positive' ? (
-                              <IconArrowUpRight className="h-4 w-4" />
-                            ) : (
-                              <IconArrowDownRight className="h-4 w-4" />
-                            )}
-                            {stat.change}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="transactions">
-              <Card className="bg-background/50 backdrop-blur-sm border-white/10">
-                <CardContent className="p-6">
-                  <div className="space-y-6">
-                    {pointTransactions.map((transaction) => (
-                      <div
-                        key={transaction.id}
-                        className="flex items-center justify-between border-b border-white/10 pb-4 last:border-0 last:pb-0"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={`p-2 rounded-full ${
-                            transaction.type === 'earned' ? 'bg-green-500/10' : 'bg-red-500/10'
-                          }`}>
-                            {transaction.type === 'earned' ? (
-                              <IconArrowUpRight className={`h-4 w-4 ${
-                                transaction.type === 'earned' ? 'text-green-500' : 'text-red-500'
-                              }`} />
-                            ) : (
-                              <IconArrowDownRight className={`h-4 w-4 ${
-                                transaction.type === 'earned' ? 'text-green-500' : 'text-red-500'
-                              }`} />
-                            )}
-                          </div>
-                          <div>
-                            <p className="font-medium">{transaction.description}</p>
-                            <p className="text-sm text-gray-400">
-                              {new Date(transaction.date).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <p className={`font-semibold ${
-                          transaction.type === 'earned' ? 'text-green-500' : 'text-red-500'
-                        }`}>
-                          {transaction.type === 'earned' ? '+' : '-'}{transaction.amount}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </section>
+        {/* Tabs Section */}
+        <Tabs defaultValue="stats" className="mb-12">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="stats">Detailed Statistics</TabsTrigger>
+            <TabsTrigger value="points">Point History</TabsTrigger>
+          </TabsList>
+          <TabsContent value="stats" className="mt-0">
+            <CustomErrorBoundary fallback={<div className="text-red-500">Error loading statistics</div>}>
+              <Suspense fallback={<div className="animate-pulse">Loading statistics...</div>}>
+                <StatsGrid stats={detailedStats} />
+              </Suspense>
+            </CustomErrorBoundary>
+          </TabsContent>
+          <TabsContent value="points" className="mt-0">
+            <CustomErrorBoundary fallback={<div className="text-red-500">Error loading transactions</div>}>
+              <Suspense fallback={<div className="animate-pulse">Loading transactions...</div>}>
+                <TransactionsList transactions={pointTransactions} />
+              </Suspense>
+            </CustomErrorBoundary>
+          </TabsContent>
+        </Tabs>
 
         {/* Downloaded Models */}
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Recently Downloaded Models</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {downloadedModels.map((model, index) => (
-              <motion.div
-                key={model.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="bg-background/50 backdrop-blur-sm border-white/10">
-                  <CardHeader>
-                    <div className="w-full h-32 mb-4 rounded-lg overflow-hidden bg-white/5">
-                      <img
-                        src={model.image}
-                        alt={model.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <CardTitle>{model.name}</CardTitle>
-                    <CardDescription>
-                      {model.category} • {new Date(model.date).toLocaleDateString()}
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+          <h2 className="text-2xl font-bold mb-6">Downloaded Models</h2>
+          <CustomErrorBoundary fallback={<div className="text-red-500">Error loading downloaded models</div>}>
+            <Suspense fallback={<div className="animate-pulse">Loading downloaded models...</div>}>
+              <DownloadedModelsList models={downloadedModels} />
+            </Suspense>
+          </CustomErrorBoundary>
         </section>
 
         {/* Achievements */}
@@ -440,51 +560,44 @@ export default function ProfilePage() {
         </section>
 
         {/* Activity Grid */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6">Activity</h2>
-          <Card className="bg-background/50 backdrop-blur-sm border-white/10">
-            <CardContent className="p-6">
-              <div className="flex gap-3">
-                <div className="flex flex-col gap-[11px] text-xs text-gray-400 pt-8">
-                  {weekDays.map(day => (
-                    <span key={day} className="h-3 text-right">{day}</span>
-                  ))}
-                </div>
-                <div>
-                  <div className="grid auto-rows-[12px] grid-flow-col gap-1 overflow-hidden">
-                    {activityData.map((day, index) => {
-                      const dayOfWeek = day.date.getDay()
-                      return (
-                        <div
-                          key={index}
-                          className="w-3 h-3 rounded-sm cursor-pointer transition-colors hover:opacity-80"
-                          style={{
-                            backgroundColor: day.count > 0 
-                              ? `rgba(99, 102, 241, ${0.2 + (day.count / 5) * 0.8})`
-                              : 'rgba(255, 255, 255, 0.1)',
-                            gridRow: dayOfWeek + 1
-                          }}
-                          title={`${day.count} activities on ${day.date.toLocaleDateString()}`}
-                        />
-                      )
-                    })}
-                  </div>
-                  <div className="mt-4 flex items-center gap-4 text-sm text-gray-400">
-                    <span>Less</span>
-                    <div className="flex gap-1">
-                      <div className="w-3 h-3 rounded-sm bg-white/10" />
-                      <div className="w-3 h-3 rounded-sm bg-indigo-500/20" />
-                      <div className="w-3 h-3 rounded-sm bg-indigo-500/40" />
-                      <div className="w-3 h-3 rounded-sm bg-indigo-500/60" />
-                      <div className="w-3 h-3 rounded-sm bg-indigo-500/80" />
-                    </div>
-                    <span>More</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <section className="mb-12">
+          <ActivityGrid data={activityData} />
         </section>
+
+        {/* Footer */}
+        <footer className="w-full bg-background/80 backdrop-blur-sm border-t border-white/10">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-gray-400">ThreeD</p>
+              <div className="flex items-center gap-4">
+                <Link
+                  href="https://www.instagram.com/katakuri.2004/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-gray-300 transition-colors"
+                >
+                  <IconBrandInstagram className="h-5 w-5" />
+                </Link>
+                <Link
+                  href="https://github.com/Katakuri004"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-gray-300 transition-colors"
+                >
+                  <IconBrandGithub className="h-5 w-5" />
+                </Link>
+                <Link
+                  href="https://www.linkedin.com/in/arpit-kumar-kata/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gray-400 hover:text-gray-300 transition-colors"
+                >
+                  <IconBrandLinkedin className="h-5 w-5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   )
