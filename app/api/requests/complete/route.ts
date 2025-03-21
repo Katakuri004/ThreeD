@@ -2,7 +2,6 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/auth"
 import { prisma } from "@/lib/prisma"
-import { PrismaClient } from "@prisma/client"
 
 type SessionUser = {
   id: string
@@ -20,12 +19,20 @@ export async function POST(req: Request) {
 
     const user = session.user as SessionUser
     const data = await req.json()
-    const { requestId, modelId } = data
+    const { requestId } = data
 
     // Validate request exists and is in progress
-    const request = await prisma.request.findUnique({
+    const request = await prisma.model.findUnique({
       where: { id: requestId },
-      include: { requester: true },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
     })
 
     if (!request) {
@@ -35,42 +42,30 @@ export async function POST(req: Request) {
       )
     }
 
-    if (request.status !== "in_progress") {
+    if (request.status !== "IN_PROGRESS") {
       return NextResponse.json(
         { error: "Request is not in progress" },
         { status: 400 }
       )
     }
 
-    if (request.accepterId !== user.id) {
-      return NextResponse.json(
-        { error: "Only the accepter can complete the request" },
-        { status: 403 }
-      )
-    }
-
-    // Complete request and transfer points in a transaction
-    const result = await prisma.$transaction(async (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'>) => {
-      // Update request status
-      const updatedRequest = await tx.request.update({
-        where: { id: requestId },
-        data: {
-          status: "completed",
-          completedAt: new Date(),
-          modelId,
-        },
-      })
-
-      // Transfer points to accepter
-      await tx.points.update({
-        where: { userId: user.id },
-        data: { amount: { increment: request.pointsPrize } },
-      })
-
-      return updatedRequest
+    // Update request status
+    const updatedRequest = await prisma.model.update({
+      where: { id: requestId },
+      data: {
+        status: "COMPLETED",
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
+        }
+      },
     })
 
-    return NextResponse.json(result)
+    return NextResponse.json(updatedRequest)
   } catch (error) {
     console.error("Error completing request:", error)
     return NextResponse.json(
