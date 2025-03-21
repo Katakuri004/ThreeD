@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     const request = await prisma.model.findUnique({
       where: { id: requestId },
       include: {
-        creator: {
+        user: {
           select: {
             id: true,
             name: true,
@@ -42,48 +42,33 @@ export async function POST(req: Request) {
       )
     }
 
-    if (request.status !== "open") {
+    if (request.status !== "DRAFT") {
       return NextResponse.json(
-        { error: "Request is not open" },
+        { error: "Request is not available" },
         { status: 400 }
       )
     }
 
-    if (request.creator.id === user.id) {
+    if (request.userId === user.id) {
       return NextResponse.json(
         { error: "Cannot accept your own request" },
         { status: 400 }
       )
     }
 
-    if (new Date(request.expiryDate) < new Date()) {
-      return NextResponse.json(
-        { error: "Request has expired" },
-        { status: 400 }
-      )
-    }
-
-    // Update request status and set accepter
+    // Update request status
     const updatedRequest = await prisma.model.update({
       where: { id: requestId },
       data: {
-        status: "in_progress",
-        accepterId: user.id,
-        acceptedAt: new Date(),
+        status: "IN_PROGRESS",
       },
       include: {
-        creator: {
+        user: {
           select: {
             name: true,
             email: true,
           },
-        },
-        accepter: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
+        }
       },
     })
 

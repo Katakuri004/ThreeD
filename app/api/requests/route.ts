@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/api/auth/[...nextauth]/auth"
 import { prisma } from "@/lib/prisma"
-import { Prisma, PrismaClient } from "@prisma/client"
+import { Prisma } from "@prisma/client"
 
 type SessionUser = {
   id: string
@@ -20,49 +20,33 @@ export async function POST(req: Request) {
 
     const user = session.user as SessionUser
     const data = await req.json()
-    const { title, description, specifications, pointsPrize, tag, expiryDate } = data
+    const { title, description, category, fileUrl } = data
 
-    // Validate points
-    const userPoints = await prisma.user.findUnique({
-      where: { id: user.id },
-      select: { points: true }
-    })
-
-    if (!userPoints || userPoints.points < pointsPrize) {
-      return NextResponse.json(
-        { error: "Insufficient points" },
-        { status: 400 }
-      )
-    }
-
-    // Create request and deduct points
-    const request = await prisma.$transaction(async (tx) => {
-      // Deduct points from requester
-      await tx.user.update({
-        where: { id: user.id },
-        data: { points: { decrement: pointsPrize } }
-      })
-
-      // Create request
-      return tx.model.create({
-        data: {
-          title,
-          description,
-          specifications,
-          pointsPrize,
-          tag,
-          expiryDate: new Date(expiryDate),
-          requesterId: user.id,
-          status: "open",
+    // Create new model
+    const model = await prisma.model.create({
+      data: {
+        title,
+        description,
+        category,
+        fileUrl,
+        status: "DRAFT",
+        userId: user.id,
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true,
+          },
         },
-      })
+      },
     })
 
-    return NextResponse.json(request)
+    return NextResponse.json(model)
   } catch (error) {
-    console.error("Error creating request:", error)
+    console.error("Error creating model:", error)
     return NextResponse.json(
-      { error: "Failed to create request" },
+      { error: "Failed to create model" },
       { status: 500 }
     )
   }
@@ -71,34 +55,32 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
-    const tag = searchParams.get("tag")
+    const category = searchParams.get("category")
     const sortBy = searchParams.get("sortBy") || "date"
 
-    const requests = await prisma.model.findMany({
+    const models = await prisma.model.findMany({
       where: {
-        tag: tag || undefined,
-        status: "open",
-        expiryDate: { gt: new Date() },
+        category: category || undefined,
+        status: "PUBLIC",
       },
       include: {
-        requester: {
+        user: {
           select: {
             name: true,
             email: true,
-            points: true,
           },
         },
       },
-      orderBy: sortBy === "points" 
-        ? { pointsPrize: "desc" }
+      orderBy: sortBy === "likes" 
+        ? { likes: "desc" }
         : { createdAt: "desc" },
     })
 
-    return NextResponse.json(requests)
+    return NextResponse.json(models)
   } catch (error) {
-    console.error("Error fetching requests:", error)
+    console.error("Error fetching models:", error)
     return NextResponse.json(
-      { error: "Failed to fetch requests" },
+      { error: "Failed to fetch models" },
       { status: 500 }
     )
   }
