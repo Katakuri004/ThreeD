@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { BackgroundBoxes } from "@/components/ui/background-boxes"
 import { Badge } from "@/components/ui/badge"
-import { type ModelTag } from "@/app/models/[id]/page"
+import { type ModelTag } from "@/types/model"
 import { IconCoin, IconTrendingUp, IconFilter, IconSortAscending, IconMessage, IconUser, IconTrophy, IconMedal } from "@tabler/icons-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
