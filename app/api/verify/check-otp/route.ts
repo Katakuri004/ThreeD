@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth"
 import { prisma } from "@/lib/prisma"
 
 export async function POST(req: Request) {
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
           email: session.user.email,
         },
         data: {
-          verified: true,
+          emailVerified: new Date(),
         },
       })
       console.log("[VERIFY_CHECK_OTP] User marked as verified")

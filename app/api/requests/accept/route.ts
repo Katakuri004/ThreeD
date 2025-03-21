@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth"
 import { prisma } from "@/lib/prisma"
 
 type SessionUser = {
@@ -22,9 +22,17 @@ export async function POST(req: Request) {
     const { requestId } = data
 
     // Validate request exists and is open
-    const request = await prisma.request.findUnique({
+    const request = await prisma.model.findUnique({
       where: { id: requestId },
-      include: { requester: true },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
     })
 
     if (!request) {
@@ -41,7 +49,7 @@ export async function POST(req: Request) {
       )
     }
 
-    if (request.requesterId === user.id) {
+    if (request.creator.id === user.id) {
       return NextResponse.json(
         { error: "Cannot accept your own request" },
         { status: 400 }
@@ -56,7 +64,7 @@ export async function POST(req: Request) {
     }
 
     // Update request status and set accepter
-    const updatedRequest = await prisma.request.update({
+    const updatedRequest = await prisma.model.update({
       where: { id: requestId },
       data: {
         status: "in_progress",
@@ -64,7 +72,7 @@ export async function POST(req: Request) {
         acceptedAt: new Date(),
       },
       include: {
-        requester: {
+        creator: {
           select: {
             name: true,
             email: true,

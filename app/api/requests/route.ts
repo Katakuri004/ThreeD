@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { authOptions } from "@/app/api/auth/[...nextauth]/auth"
 import { prisma } from "@/lib/prisma"
-import { PrismaClient } from "@prisma/client"
+import { Prisma, PrismaClient } from "@prisma/client"
 
 type SessionUser = {
   id: string
@@ -23,11 +23,12 @@ export async function POST(req: Request) {
     const { title, description, specifications, pointsPrize, tag, expiryDate } = data
 
     // Validate points
-    const userPoints = await prisma.points.findUnique({
-      where: { userId: user.id },
+    const userPoints = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: { points: true }
     })
 
-    if (!userPoints || userPoints.amount < pointsPrize) {
+    if (!userPoints || userPoints.points < pointsPrize) {
       return NextResponse.json(
         { error: "Insufficient points" },
         { status: 400 }
@@ -35,15 +36,15 @@ export async function POST(req: Request) {
     }
 
     // Create request and deduct points
-    const request = await prisma.$transaction(async (tx: Omit<PrismaClient, '$connect' | '$disconnect' | '$on' | '$transaction' | '$use'>) => {
+    const request = await prisma.$transaction(async (tx) => {
       // Deduct points from requester
-      await tx.points.update({
-        where: { userId: user.id },
-        data: { amount: { decrement: pointsPrize } },
+      await tx.user.update({
+        where: { id: user.id },
+        data: { points: { decrement: pointsPrize } }
       })
 
       // Create request
-      return tx.request.create({
+      return tx.model.create({
         data: {
           title,
           description,
@@ -52,6 +53,7 @@ export async function POST(req: Request) {
           tag,
           expiryDate: new Date(expiryDate),
           requesterId: user.id,
+          status: "open",
         },
       })
     })
@@ -72,7 +74,7 @@ export async function GET(req: Request) {
     const tag = searchParams.get("tag")
     const sortBy = searchParams.get("sortBy") || "date"
 
-    const requests = await prisma.request.findMany({
+    const requests = await prisma.model.findMany({
       where: {
         tag: tag || undefined,
         status: "open",
