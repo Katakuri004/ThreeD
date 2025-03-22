@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { BackgroundBoxes } from "@/components/ui/background-boxes";
 import { toast } from "sonner";
-import { IconPlus, IconX } from "@tabler/icons-react";
+import { IconPlus, IconX, IconCheck, IconX as IconCross } from "@tabler/icons-react";
 import Image from "next/image";
 import { useUploadThing } from "@/lib/uploadthing";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { cn } from "@/lib/utils";
 
 interface UploadFormData {
   title: string;
@@ -27,6 +28,62 @@ interface UploadFormData {
   file: File | null;
   images: File[];
 }
+
+interface UploadEvent {
+  id: string;
+  fileName: string;
+  status: 'uploading' | 'success' | 'error';
+  timestamp: Date;
+  error?: string;
+}
+
+// Recent Upload Events Component
+const RecentUploadEvents = ({ events }: { events: UploadEvent[] }) => {
+  return (
+    <div className="fixed right-4 top-24 w-80 space-y-2 rounded-lg border bg-card p-4 shadow-lg">
+      <h3 className="mb-4 font-semibold">Recent Uploads</h3>
+      <div className="max-h-[400px] space-y-2 overflow-y-auto">
+        {events.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No recent uploads</p>
+        ) : (
+          events.map((event) => (
+            <div
+              key={event.id}
+              className="flex items-center justify-between rounded-md border border-muted-foreground/20 bg-background/50 p-2"
+            >
+              <div className="flex items-center gap-2">
+                {event.status === 'uploading' && (
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground/20 border-t-primary" />
+                )}
+                {event.status === 'success' && (
+                  <IconCheck className="h-4 w-4 text-green-500" />
+                )}
+                {event.status === 'error' && (
+                  <IconCross className="h-4 w-4 text-red-500" />
+                )}
+                <div>
+                  <p className="text-sm font-medium truncate max-w-[180px]" title={event.fileName}>
+                    {event.fileName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {event.timestamp.toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+              <div className={cn(
+                "text-xs font-medium",
+                event.status === 'success' && "text-green-500",
+                event.status === 'error' && "text-red-500"
+              )}>
+                {event.status === 'uploading' ? 'Uploading...' : event.status}
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
 
 export default function UploadPage() {
   const [showForm, setShowForm] = useState(false);
@@ -37,12 +94,26 @@ export default function UploadPage() {
     images: [],
   });
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [uploadEvents, setUploadEvents] = useState<UploadEvent[]>([]);
   const { startUpload } = useUploadThing("modelUploader");
   const router = useRouter();
+
+  const addUploadEvent = (event: Omit<UploadEvent, 'id' | 'timestamp'>) => {
+    const newEvent = {
+      ...event,
+      id: Math.random().toString(36).slice(2),
+      timestamp: new Date(),
+    };
+    setUploadEvents(prev => [newEvent, ...prev].slice(0, 10)); // Keep only last 10 events
+  };
 
   const handleFileSelect = (file: File) => {
     setFormData((prev) => ({ ...prev, file }));
     setShowForm(true);
+    addUploadEvent({
+      fileName: file.name,
+      status: 'uploading',
+    });
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -51,6 +122,13 @@ export default function UploadPage() {
       toast.error("Maximum 6 images allowed");
       return;
     }
+
+    files.forEach(file => {
+      addUploadEvent({
+        fileName: file.name,
+        status: 'uploading',
+      });
+    });
 
     const newImages = [...formData.images, ...files];
     setFormData((prev) => ({ ...prev, images: newImages }));
@@ -66,6 +144,13 @@ export default function UploadPage() {
   };
 
   const removeImage = (index: number) => {
+    const removedImage = formData.images[index];
+    addUploadEvent({
+      fileName: removedImage.name,
+      status: 'error',
+      error: 'Removed by user'
+    });
+    
     setFormData((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
@@ -85,6 +170,10 @@ export default function UploadPage() {
       if (!modelUploadResult) {
         throw new Error("Failed to upload model file");
       }
+      addUploadEvent({
+        fileName: formData.file.name,
+        status: 'success',
+      });
 
       // Upload images if any
       let imageUrls: string[] = [];
@@ -92,6 +181,12 @@ export default function UploadPage() {
         const imageUploadResult = await startUpload(formData.images);
         if (imageUploadResult) {
           imageUrls = imageUploadResult.map(res => res.url);
+          formData.images.forEach(image => {
+            addUploadEvent({
+              fileName: image.name,
+              status: 'success',
+            });
+          });
         }
       }
 
@@ -103,6 +198,22 @@ export default function UploadPage() {
     } catch (error) {
       console.error(error);
       toast.error("Failed to upload model");
+      
+      // Mark all current uploads as failed
+      if (formData.file) {
+        addUploadEvent({
+          fileName: formData.file.name,
+          status: 'error',
+          error: 'Upload failed'
+        });
+      }
+      formData.images.forEach(image => {
+        addUploadEvent({
+          fileName: image.name,
+          status: 'error',
+          error: 'Upload failed'
+        });
+      });
     }
   };
 
@@ -207,6 +318,9 @@ export default function UploadPage() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
+
+      {/* Recent Upload Events Section */}
+      <RecentUploadEvents events={uploadEvents} />
     </div>
   );
 } 

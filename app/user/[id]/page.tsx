@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { IconCoin, IconHeart, Icon3dCubeSphere, IconTrophy, IconLoader2, IconMessage, IconHome, IconUser, IconChartBar, IconHistory, IconUpload } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
-import { ModelTag, TAG_LABELS } from "@/types/models";
+import { ModelTag, TAG_LABELS } from "@/types/model";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";

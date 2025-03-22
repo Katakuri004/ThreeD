@@ -47,6 +47,7 @@
     "react-dom": "18.2.0",
     "react-dropzone": "^14.3.8",
     "resend": "^4.1.2",
+    "simplex-noise": "^3.0.1",
     "sonner": "^1.4.0",
     "tailwind-merge": "^2.6.0",
     "three": "^0.161.0",

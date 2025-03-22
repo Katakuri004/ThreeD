@@ -5,7 +5,7 @@ import { BackgroundBoxes } from "@/components/ui/background-boxes"
 import { IconHeart, IconDownload } from "@tabler/icons-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { ModelTag, TAG_LABELS } from "@/types/models"
+import { ModelTag, TAG_LABELS } from "@/types/model"
 import { TagSelector } from "@/components/ui/tag-selector"
 import { useState } from "react"
 

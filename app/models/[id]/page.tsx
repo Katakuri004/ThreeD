@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { ModelTag, TAG_LABELS } from "@/types/models";
+import { ModelTag, TAG_LABELS } from "@/types/model";
 
 interface ProductImage {
   id: number;

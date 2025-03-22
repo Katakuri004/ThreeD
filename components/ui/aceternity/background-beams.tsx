@@ -1,94 +1,118 @@
 "use client";
 import { cn } from "@/lib/utils";
 import React, { useEffect, useRef } from "react";
-import { createNoise3D } from "simplex-noise";
 import { useMotionValue, useSpring, useTransform } from "framer-motion";
 
+// Simple noise function that returns a value between -1 and 1
+const noise3D = (x: number, y: number, z: number) => {
+  return (Math.sin(x * 10 + z) + Math.sin(y * 10 + z)) * 0.5;
+};
+
 export const BackgroundBeams = ({ className }: { className?: string }) => {
-  const ref = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
-  const noise = createNoise3D();
 
-  const springConfig = { damping: 25, stiffness: 700 };
-  const springConfig2 = { damping: 15, stiffness: 300 };
-
-  const rotateX = useSpring(
-    useTransform(mouseY, [-100, 100], [45, -45]),
-    springConfig
-  );
-  const rotateY = useSpring(
-    useTransform(mouseX, [-100, 100], [-45, 45]),
-    springConfig
-  );
-  const rotateX2 = useSpring(
-    useTransform(mouseY, [-100, 100], [30, -30]),
-    springConfig2
-  );
-  const rotateY2 = useSpring(
-    useTransform(mouseX, [-100, 100], [-30, 30]),
-    springConfig2
-  );
+  const smoothMouseX = useSpring(mouseX, {
+    damping: 20,
+    stiffness: 300,
+  });
+  const smoothMouseY = useSpring(mouseY, {
+    damping: 20,
+    stiffness: 300,
+  });
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!ref.current) return;
-      const rect = ref.current.getBoundingClientRect();
-      const width = rect.width;
-      const height = rect.height;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
-      const mouseXPos = e.clientX - rect.left;
-      const mouseYPos = e.clientY - rect.top;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-      const xPct = mouseXPos / width - 0.5;
-      const yPct = mouseYPos / height - 0.5;
+    let animationFrameId: number;
+    let time = 0;
 
-      mouseX.set(xPct * 100);
-      mouseY.set(yPct * 100);
+    const animate = () => {
+      if (!ctx || !canvas) return;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const gradientBackground = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradientBackground.addColorStop(0, "#1a1a1a");
+      gradientBackground.addColorStop(1, "#1a1a1a");
+      ctx.fillStyle = gradientBackground;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const gradientBeams = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradientBeams.addColorStop(0, "#4f46e5");
+      gradientBeams.addColorStop(1, "#6366f1");
+      ctx.fillStyle = gradientBeams;
+
+      const w = canvas.width;
+      const h = canvas.height;
+      const mouseXNorm = smoothMouseX.get() / w;
+      const mouseYNorm = smoothMouseY.get() / h;
+
+      for (let i = 0; i < 8; i++) {
+        const x = w * 0.5;
+        const y = h * 0.5;
+        const angle = (i / 8) * Math.PI * 2 + time * 0.1;
+        const length = w * 0.4;
+
+        const noiseFactor = noise3D(
+          mouseXNorm * 0.5,
+          mouseYNorm * 0.5,
+          time * 0.1 + i
+        );
+
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle);
+        ctx.beginPath();
+        ctx.moveTo(-length * 0.5, 0);
+        ctx.lineTo(length * 0.5, 0);
+        ctx.lineWidth = 50 + noiseFactor * 50;
+        ctx.strokeStyle = gradientBeams;
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      time += 0.01;
+      animationFrameId = requestAnimationFrame(animate);
     };
 
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      mouseX.set(x);
+      mouseY.set(y);
+    };
+
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    handleResize();
+    window.addEventListener("resize", handleResize);
     window.addEventListener("mousemove", handleMouseMove);
 
+    animate();
+
     return () => {
+      window.removeEventListener("resize", handleResize);
       window.removeEventListener("mousemove", handleMouseMove);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+      }
     };
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, smoothMouseX, smoothMouseY]);
 
   return (
-    <div
-      ref={ref}
-      className={cn(
-        "h-full w-full bg-black [perspective:1000px] relative overflow-hidden",
-        className
-      )}
-    >
-      <div
-        style={{
-          transformStyle: "preserve-3d",
-          transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`,
-          transition: "transform 0.1s ease-out",
-        }}
-        className="absolute inset-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4"
-      >
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            style={{
-              transformStyle: "preserve-3d",
-              transform: `rotateX(${rotateX2}deg) rotateY(${rotateY2}deg)`,
-              transition: "transform 0.1s ease-out",
-            }}
-            className="relative h-full w-full rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 p-4"
-          >
-            <div className="absolute inset-0 bg-black/50 rounded-xl" />
-            <div className="relative z-10 h-full w-full">
-              <div className="h-full w-full rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 p-4">
-                <div className="h-full w-full rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-500/10" />
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
+    <canvas
+      ref={canvasRef}
+      className={cn("pointer-events-none absolute inset-0 h-full w-full", className)}
+    />
   );
 }; 

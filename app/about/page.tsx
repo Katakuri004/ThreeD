@@ -64,10 +64,10 @@ const features = [
 
 const team = [
   {
-    name: "John Doe",
-    role: "Founder & Lead Developer",
-    bio: "Passionate about making engineering education more accessible through technology.",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=John"
+    name: "Arpit Kumar",
+    role: "Lead Developer",
+    bio: "I like Tech, Music and Cheesecake",
+    image: "/img/headshot pic.jpg"
   },
   {
     name: "Jane Smith",
@@ -76,10 +76,10 @@ const team = [
     image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jane"
   },
   {
-    name: "Mike Johnson",
+    name: "Arya ",
     role: "3D Model Specialist",
     bio: "Expert in creating detailed 3D models for engineering education.",
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Mike"
+    image: "/img/arya-hs.jpg"
   }
 ]
 

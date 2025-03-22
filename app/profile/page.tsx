@@ -174,37 +174,76 @@ const pointTransactions: PointTransaction[] = [
 
 // Activity Grid Component
 const ActivityGrid = memo(function ActivityGrid({ data }: { data: ActivityDay[] }) {
+  // Group data by weeks
+  const weeks = useMemo(() => {
+    const weeks: ActivityDay[][] = []
+    let currentWeek: ActivityDay[] = []
+    
+    // Sort data by date
+    const sortedData = [...data].sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    )
+    
+    // Take only the last 51 weeks (357 days) plus current week
+    const recentData = sortedData.slice(-357)
+    
+    recentData.forEach((day) => {
+      if (currentWeek.length === 7) {
+        weeks.push(currentWeek)
+        currentWeek = []
+      }
+      currentWeek.push(day)
+    })
+    
+    if (currentWeek.length > 0) {
+      weeks.push(currentWeek)
+    }
+    
+    return weeks
+  }, [data])
+
   return (
     <div className="bg-black/20 rounded-lg p-6 mb-12">
       <h2 className="text-xl font-semibold mb-6">Activity</h2>
-      <div className="grid grid-cols-7 gap-2">
-        <div className="flex flex-col gap-2">
-          {weekDays.map((day) => (
-            <div key={day} className="h-8 flex items-center justify-center text-xs text-gray-400">
-              {day}
-            </div>
-          ))}
-        </div>
-        {data.map((day, index) => (
-          <div
-            key={day.date}
-            className={cn(
-              "h-8 rounded-md transition-colors",
-              day.activity === 0
-                ? "bg-gray-800/50"
-                : day.activity < 3
-                ? "bg-indigo-900/50"
-                : day.activity < 5
-                ? "bg-indigo-700/50"
-                : "bg-indigo-500/50",
-              "hover:bg-opacity-75 cursor-pointer group relative"
-            )}
-          >
-            <div className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-black/90 rounded text-xs whitespace-nowrap">
-              {day.activity} activities on {new Date(day.date).toLocaleDateString()}
-            </div>
+      <div className="flex justify-start max-w-[900px] mx-auto">
+        <div className="flex gap-3">
+          {/* Weekday labels */}
+          <div className="flex flex-col gap-[3px] pr-2 text-right">
+            {weekDays.map((day) => (
+              <div key={day} className="h-[10px] flex items-center justify-end text-[9px] text-gray-400 leading-none">
+                {day}
+              </div>
+            ))}
           </div>
-        ))}
+          
+          {/* Activity grid */}
+          <div className="flex gap-[3px]">
+            {weeks.slice(-51).map((week, weekIndex) => (
+              <div key={weekIndex} className="flex flex-col gap-[3px]">
+                {week.map((day) => (
+                  <div
+                    key={day.date}
+                    className={cn(
+                      "h-[10px] w-[10px] rounded-[2px] transition-colors",
+                      day.activity === 0
+                        ? "bg-gray-800/50"
+                        : day.activity < 3
+                        ? "bg-indigo-900/50"
+                        : day.activity < 5
+                        ? "bg-indigo-700/50"
+                        : "bg-indigo-500/50",
+                      "hover:bg-opacity-75 cursor-pointer group relative"
+                    )}
+                  >
+                    <div className="hidden group-hover:block absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-0.5 bg-black/90 rounded text-[9px] whitespace-nowrap z-10">
+                      {day.activity} activities on {new Date(day.date).toLocaleDateString()}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -266,15 +305,22 @@ function generateActivityData(): ActivityDay[] {
   const data: ActivityDay[] = []
   const today = new Date()
   const startDate = new Date(today)
-  startDate.setDate(today.getDate() - 364)
+  startDate.setDate(today.getDate() - 356) // Start from 51 weeks ago
+  
+  // Ensure we start from a Sunday
+  while (startDate.getDay() !== 0) {
+    startDate.setDate(startDate.getDate() - 1)
+  }
 
-  for (let i = 0; i < 365; i++) {
+  // Generate data for exactly 51 weeks plus current week
+  const days = 357 // 51 weeks * 7 days
+  for (let i = 0; i < days; i++) {
     const currentDate = new Date(startDate)
     currentDate.setDate(startDate.getDate() + i)
     
     data.push({
       date: currentDate.toISOString(),
-      activity: Math.floor(Math.random() * 8)
+      activity: Math.floor(Math.random() * 8) // Random activity level (0-7)
     })
   }
 
@@ -386,6 +432,11 @@ const downloadedModels: DownloadedModel[] = [
 export default function ProfilePage() {
   const { data: session, status } = useSession()
 
+  // Memoize user image URL
+  const userImage = useMemo(() => {
+    return session?.user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user?.name}`
+  }, [session?.user?.image, session?.user?.name])
+
   // Memoize activity data to prevent unnecessary recalculation
   const activityData = useMemo(() => generateActivityData(), [])
 
@@ -414,11 +465,6 @@ export default function ProfilePage() {
       </div>
     )
   }
-
-  // Memoize user image URL
-  const userImage = useMemo(() => {
-    return session.user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session.user?.name}`
-  }, [session.user?.image, session.user?.name])
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-background">
