@@ -45,14 +45,14 @@ export async function GET(
       name: user.name,
       email: user.email,
       image: user.image,
-      models: user.models.map(model => ({
+      models: user.models.map((model: { category: string; createdAt: Date }) => ({
         ...model,
         tag: model.category as any, // Map category to tag
         createdAt: model.createdAt.toISOString(),
       })),
       pointHistory: [], // Initialize empty for now
       stats: {
-        totalLikes: user.models.reduce((sum, model) => sum + model.likes, 0),
+        totalLikes: user.models.reduce((sum: number, model: { likes: number }) => sum + model.likes, 0),
         modelsCreated: user.models.length,
         completedBounties: 0, // Initialize to 0 for now
       },
@@ -113,14 +113,14 @@ export async function PATCH(
       name: updatedUser.name,
       email: updatedUser.email,
       image: updatedUser.image,
-      models: updatedUser.models.map(model => ({
+      models: updatedUser.models.map((model: { category: string; createdAt: Date }) => ({
         ...model,
         tag: model.category as any,
         createdAt: model.createdAt.toISOString(),
       })),
       pointHistory: [],
       stats: {
-        totalLikes: updatedUser.models.reduce((sum, model) => sum + model.likes, 0),
+        totalLikes: updatedUser.models.reduce((sum: number, model: { likes: number }) => sum + model.likes, 0),
         modelsCreated: updatedUser.models.length,
         completedBounties: 0,
       },

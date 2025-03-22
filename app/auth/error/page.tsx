@@ -1,11 +1,12 @@
 "use client"
 
 import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
-export default function ErrorPage() {
+function ErrorContent() {
   const searchParams = useSearchParams()
   const error = searchParams.get("error")
 
@@ -38,5 +39,13 @@ export default function ErrorPage() {
         </div>
       </Card>
     </div>
+  )
+}
+
+export default function ErrorPage() {
+  return (
+    <Suspense>
+      <ErrorContent />
+    </Suspense>
   )
 } 
